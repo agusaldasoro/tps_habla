@@ -1,5 +1,41 @@
 import sys
 from shutils import copyfile
+
+def parsePitchTier(aPitchTier):
+
+    with open(aPitchTier, 'r') as f:
+        f.readline()
+        f.readline()
+        f.readline()
+        _, _ , xmin = f.readline().split()
+        _, _ , xmax = f.readline().split()
+        _,_,_, amntOfPoints = f.readline().split()
+        points = []
+        for i in range(0,amntOfPoints):
+            f.readline()
+            _,_, number = f.readline().split()
+            _,_, value = f.readline().split()
+            points.append(zip(number,value))
+
+    return xmin, xmax, points
+
+def builPitchTier(aPitchTier, xmin, xmax,points):
+
+    with open(aPitchTier, 'w') as f:
+        f.write('File type = "ooTextFile"\n')
+        f.write('Object class = "PitchTier"\n')
+        f.write('\n')
+        f.write('xmin = ' + xmin)
+        f.write('xmax = ' + xmin)
+        f.write('points: size = ' + len(points))
+        for i in range(0, len(points)):
+            num, val = points[i]
+            f.write('points [' + str(i+1) + ']:\n')
+            f.write('\tnumber = ' + str(num) +'\n')
+            f.write('\tvalue = ' + str(val) +'\n')
+
+
+
 def obtainDiphones(aString):
     '''gets diphones from an input strings
     '''
@@ -33,8 +69,10 @@ def transformarEnPregunta(fileName):
 
     originalPitchTier = fileName + '.PitchTier'
     newPitchTier = fileName + '-mod.newPitchTier'
-    #do something
-
+    xmin, xmax, points = parsePitchTier(originalPitchTier)
+    #do something with points
+    
+    builPitchTier(newPitchTier, xmin, xmax, points)
 
 
 def main():
@@ -52,7 +90,7 @@ def main():
     if prosodia:
         os.system('praat praat_examples/extraer-pitch-track.praat ' + fileName + ' ' + fileName[:-3] + '.PitchTier 50 300')
         transformarEnPregunta(fileName)
-        os.system('praat reemplazar-pitch-track.praat ' + fileName + ' ' + fileName[:-3] + '-mod.PitchTier ' + fileName[:-3] + '-mod.wav 50 300')
+        os.system('praat praat_examples/reemplazar-pitch-track.praat ' + fileName + ' ' + fileName[:-3] + '-mod.PitchTier ' + fileName[:-3] + '-mod.wav 50 300')
         copyfile( fileName[:-3] + '-mod.wav',fileName)
 
 if __name__ == '__main__':
