@@ -103,7 +103,7 @@ item []:
         intervals [23]:
             xmin = 14.522806081798974 
             xmax = 14.534855997801568 
-            text = "mA" 
+            text = "" 
         intervals [24]:
             xmin = 14.534855997801568 
             xmax = 14.74271704884632 
@@ -215,7 +215,7 @@ item []:
         intervals [51]:
             xmin = 27.59123134057883 
             xmax = 27.60308878409601 
-            text = "ak" 
+            text = "" 
         intervals [52]:
             xmin = 27.60308878409601 
             xmax = 27.95090712726655 
