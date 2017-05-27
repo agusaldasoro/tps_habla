@@ -65,15 +65,16 @@ def buildPraatScrip(listOfWavFiles, aPraatFile, anOutputFile):
     '''write and executes a praat script that'll concatenate the wav files specified on listOfWavFiles on outputFile
     '''
     with open(aPraatFile, 'w') as f:
+        currentDir = os.getcwd()
         for aFile in listOfWavFiles:
-            f.write('Read from file... /home/ph-02/Documentos/tps_habla/tp1/' + aFile + '\n')
+            f.write('Read from file... '+currentDir +'/' + aFile + '\n')
         f.write('select Sound diphone0'+ '\n')
         for i in range(1,len(listOfWavFiles)):
             f.write('plus Sound diphone' + str(i) + '\n')
 
         f.write('Concatenate recoverably\n')
         f.write('select Sound chain\n')
-        f.write('Save as WAV file... /home/ph-02/Documentos/tps_habla/tp1/' + anOutputFile)
+        f.write('Save as WAV file... '+currentDir + '/' + anOutputFile)
 
 
 
@@ -83,14 +84,13 @@ def transformarEnPregunta(fileName):
     newPitchTier = fileName + '-mod.PitchTier'
     xmin, xmax, points = parsePitchTier(originalPitchTier)
     #do something with points
-    print points
-    percent90 = math.floor(len(points)*0.8)
-    newPoints = points[:int(percent90)]
-    _ , newVal = points[int(percent90)]
-    for i in range(int(percent90)+1, len(points)):
+    percent = math.floor(len(points)*0.8)
+    newPoints = points[:int(percent)]
+    _ , newVal = points[int(percent)]
+    for i in range(int(percent)+1, len(points)):
         num, value = points[i]
+        newVal += 20
         newPoints.append([num,newVal])
-        newVal += 10
 
     builPitchTier(newPitchTier, xmin, xmax, newPoints)
 
@@ -105,13 +105,13 @@ def main():
 
     fileName = sys.argv[2]
     listOfDiphones = obtainDiphones(a)
-    diphones = buildWavFiles(listOfDiphones, 'difonos/')
+    diphones = buildWavFiles(listOfDiphones, 'difonos2/')
     buildPraatScrip(diphones, 'concatenate.praat', fileName)
-
+    os.system('praat concatenate.praat')
     if prosodia:
         os.system('praat extraer-pitch-track.praat ' + fileName + ' ' + fileName[:-4] + '.PitchTier 50 300')
         transformarEnPregunta(fileName[:-4])
-        os.system('praat reemplazar-pitch-track.praat ' + fileName + ' ' + fileName[:-4] + '-mod.PitchTier ' + fileName[:-4] + '-mod.wav 50 300')
+        os.system('praat reemplazar-pitch-track.praat ' + fileName + ' ' + fileName[:-4] + '-mod.PitchTier ' + fileName[:-4] + '-mod.wav 50 500')
         copyfile( fileName[:-4] + '-mod.wav',fileName)
 
 if __name__ == '__main__':
