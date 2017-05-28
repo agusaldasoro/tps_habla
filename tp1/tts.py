@@ -7,6 +7,7 @@ from shutil import rmtree
 def main():
     phrase = sys.argv[1]
     fileName = sys.argv[2]
+    createFolder(fileName)
 
     prosodia = False
     if phrase[-1:] == '?':
@@ -15,24 +16,25 @@ def main():
 
     listOfDiphones = obtainDiphones(phrase)
     diphones = buildWavFiles(listOfDiphones, 'diphones/')
-
-    buildPraatScrip(diphones, 'concatenate.praat', fileName)
-    # if not os.path.exists(fileName):
-    #     os.makedirs(fileName)
+    buildPraatScript(diphones, 'concatenate.praat', fileName)
     os.system('praat concatenate.praat')
 
     if prosodia:
-        print('praat extract-pitch-track.praat ' + fileName + ' ' + fileName[:-4] + '.PitchTier 50 300')
-        os.system('praat extract-pitch-track.praat ' + fileName + ' ' + fileName[:-4] + '.PitchTier 50 300')
-        # convertIntoQuestion(fileName[:-4])
-        # os.system('praat reemplazar-pitch-track.praat ' + fileName + ' ' + fileName[:-4] + '-mod.PitchTier ' + fileName[:-4] + '-mod.wav 50 500')
-        # copyfile( fileName[:-4] + '-mod.wav',fileName)
+        completePath = os.getcwd() + fileName[:-4]
+        # Extract Pitch Track
+        os.system('praat extract-pitch-track.praat ' + completePath + '.wav ' + completePath + '.PitchTier 50 300')
+        # Create new Pitch Track
+        convertIntoQuestion(completePath)
+        # Replace with New Pitch Track
+        os.system('praat replace-pitch-track.praat ' + completePath + '.wav ' + completePath + '-mod.PitchTier ' + completePath + '-mod.wav 50 500')
+        copyfile(completePath + '-mod.wav', completePath + '.wav')
+        os.remove(completePath + '-mod.wav')
 
     garbageCollector()
 
 
+# gets diphones from an input string
 def obtainDiphones(aString):
-    '''gets diphones from an input strings'''
     aList = []
     aString = '-' + aString + '-'
     for i in range(0, len(aString)-1):
@@ -41,8 +43,8 @@ def obtainDiphones(aString):
     return aList
 
 
+# Copy and rename the necesary wav files to tempWavs
 def buildWavFiles(aListOfDiphones, aWavDirectory):
-    '''Copy and rename the necesary wav files to tempWavs'''
     if not os.path.exists('tempWavs/'):
         os.makedirs('tempWavs/')
 
@@ -58,10 +60,9 @@ def buildWavFiles(aListOfDiphones, aWavDirectory):
     return diphones
 
 
-def buildPraatScrip(listOfWavFiles, aPraatFile, anOutputFile):
-    '''write and executes a praat script that'll concatenate the wav files
-       specified on listOfWavFiles on outputFile'''
-
+# writes script in aPraatFile that'll concatenate the wav files,
+# specified on listOfWavFiles and save it on anOutputFile
+def buildPraatScript(listOfWavFiles, aPraatFile, anOutputFile):
     with open(aPraatFile, 'w') as f:
         currentDir = os.getcwd()
         for aFile in listOfWavFiles:
@@ -76,30 +77,57 @@ def buildPraatScrip(listOfWavFiles, aPraatFile, anOutputFile):
         f.write('Save as WAV file... ' + currentDir + anOutputFile)
 
 
+# Creates the Destination Folder if necesary
+def createFolder(fileName):
+    separatePath = fileName.split("/")
+    if len(separatePath) <= 2:
+        return
 
+    fileNameFolder = "/".join(separatePath[:-1][1:]) + "/"
+    if not os.path.exists(fileNameFolder):
+        os.makedirs(fileNameFolder)
+
+
+# Creates a new PitchTier file to modify prosodia
+def convertIntoQuestion(fileName):
+    originalPitchTier = fileName + '.PitchTier'
+    newPitchTier = fileName + '-mod.PitchTier'
+    xmin, xmax, points = parsePitchTier(originalPitchTier)
+
+    # Modify the last 20% of points
+    percent = math.floor(len(points) * 0.8)
+    newPoints = points[:int(percent)]
+
+    _ , newVal = points[int(percent)]
+    for i in range(int(percent) + 1, len(points)):
+        num, value = points[i]
+        newVal += 20
+        newPoints.append([num,newVal])
+
+    buildPitchTier(newPitchTier, xmin, xmax, newPoints)
+
+
+# Parses the Pitch Tier to obtain the data
 def parsePitchTier(aPitchTier):
-
     with open(aPitchTier, 'r') as f:
         f.readline()
         f.readline()
         f.readline()
         _, _, xmin = f.readline().split()
         _, _, xmax = f.readline().split()
-        amntOfPoints = f.readline().split()[3]
+        _, _, _, amountOfPoints = f.readline().split()
         points = []
-        for i in range(0,int(amntOfPoints)):
+        for i in range(0, int(amountOfPoints)):
             f.readline()
-            _,_, number = f.readline().split()
-            _,_, value = f.readline().split()
+            _, _, number = f.readline().split()
+            _, _, value = f.readline().split()
             points.append([float(number),float(value)])
 
     return xmin, xmax, points
 
-def builPitchTier(aPitchTier, xmin, xmax,points):
 
-    if not os.path.exists(aPitchTier):
-        os.makedirs(aPitchTier)
-
+# Builds a new Pitch Tier modifying the original
+def buildPitchTier(aPitchTier, xmin, xmax, points):
     with open(aPitchTier, 'w') as f:
         f.write('File type = "ooTextFile"\n')
         f.write('Object class = "PitchTier"\n')
@@ -114,30 +142,10 @@ def builPitchTier(aPitchTier, xmin, xmax,points):
             f.write('    value = ' + str(val) +'\n')
 
 
-
-
-
-
-
-def convertIntoQuestion(fileName):
-
-    originalPitchTier = fileName + '.PitchTier'
-    newPitchTier = fileName + '-mod.PitchTier'
-    xmin, xmax, points = parsePitchTier(originalPitchTier)
-    #do something with points
-    percent = math.floor(len(points)*0.8)
-    newPoints = points[:int(percent)]
-    _ , newVal = points[int(percent)]
-    for i in range(int(percent)+1, len(points)):
-        num, value = points[i]
-        newVal += 20
-        newPoints.append([num,newVal])
-
-    builPitchTier(newPitchTier, xmin, xmax, newPoints)
-
+# Deletes the temp files
 def garbageCollector():
     rmtree('tempWavs/')
-
+    os.remove('concatenate.praat')
 
 
 if __name__ == '__main__':
