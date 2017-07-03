@@ -24,11 +24,18 @@
     Para probarlo, agregar el nuevo bot a algún grupo de Telegram
     y mandar un mensaje de voz a ese grupo.
 """
-
 import os
 import time
 import sys
 import twx.botapi as tb
+from watson_developer_cloud import SpeechToTextV1, TextToSpeechV1
+import subprocess
+import copy
+
+
+stt = SpeechToTextV1(username='6f01e8bb-2faa-42a6-bec3-c1e236337b05', password='wRfZa13pn5Ke')
+tts = TextToSpeechV1(username='823bf474-b3a1-454c-9daa-f39f1fe7fba8', password='UgSusuE0f3PZ')
+
 
 class Bot(object):
 
@@ -54,11 +61,10 @@ class Bot(object):
 
         print('Bajando audio.')
         self._receive_audio_file(update.message.voice.file_id, 'audio.ogg')
-
-        print('TODO: procesar el archivo audio.ogg.')
+        text_to_speech("todoBien.wav", "todo bien, querido",  rate_change="+0%", f0mean_change="+0%")
 
         print('Enviando respuesta.')
-        self._send_audio_file(update.message.chat.id, 'audio.ogg')
+        self._send_audio_file(update.message.chat.id, 'todoBien.wav')
         
         print('Listo.\n')
 
@@ -86,7 +92,33 @@ class Bot(object):
         else:
             return -1
 
+def speech_to_text(filename, stt=stt):
+    ''' Reconocimiento del archivo de audio 'filename'. 'max_alternatives' es la cantidad de hipótesis más probables a devolver.'''
+    audio_file = open(filename, "rb")
+    ibm_recognized = stt.recognize(audio_file,
+                                 content_type="audio/wav",
+                                 model="es-ES_BroadbandModel",
+                                 timestamps="true",
+                                 max_alternatives="1",
+                                 continuous="true")
+    return(ibm_recognized)
+
+# Síntesis del texto 'text', especificando cambios en tasa de habla y f0, ambos en 
+# porcentaje respecto del default del sistema. El resultado se guarda en 'filename'.
+# Es posible que el wav generado tenga mal el header, lo cual se arregla con:
+# sox -r 22050 filename.wav tmp.wav && mv tmp.wav filename.wav
+def text_to_speech(filename, text, rate_change="+0%", f0mean_change="+0%", tts=tts):
+    ssml_text = '<prosody rate="%s" pitch="%s"> %s </prosody>' % (rate_change, f0mean_change, text)
+    with open(filename, 'wb') as audio_file:
+        audio_file.write(tts.synthesize(ssml_text,
+                                    accept='audio/wav',
+                                    voice="es-US_SofiaVoice"))
+    audio_file.close()
+
+
+
 def main():
+    
     if not os.path.exists('token.txt'):
         sys.stderr.write('Poner el token en el archivo token.txt.\n')
         sys.exit(1)
