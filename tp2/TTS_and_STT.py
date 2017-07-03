@@ -14,8 +14,8 @@ import copy
 #    para cada una apretar 'create'.
 # 5: Una vez creadas, acceder a las mismas desde el dashboard, hacer clic en 
 #    'service credentials' y después en 'view credentials'.
-stt = SpeechToTextV1(username='COMPLETAR', password='COMPLETAR')
-tts = TextToSpeechV1(username='COMPLETAR', password='COMPLETAR')
+stt = SpeechToTextV1(username='6f01e8bb-2faa-42a6-bec3-c1e236337b05', password='wRfZa13pn5Ke')
+tts = TextToSpeechV1(username='823bf474-b3a1-454c-9daa-f39f1fe7fba8', password='UgSusuE0f3PZ')
 
 # Reconocimiento del archivo de audio 'filename'.
 # 'max_alternatives' es la cantidad de hipótesis más probables a devolver.
@@ -44,7 +44,8 @@ def text_to_speech(filename, text, rate_change="+0%", f0mean_change="+0%", tts=t
 
 if __name__ == "__main__":
   # Probamos la síntesis...
-	text_to_speech("prueba.wav", "esto es una prueba", rate_change="+0%", f0mean_change="+0%")
+        
+	text_to_speech("prueba.wav", "Reproduciendo metallica", rate_change="+0%", f0mean_change="+0%")
 
 	# Y ahora probamos el reconocimiento...
 	print(speech_to_text("prueba.wav"))
