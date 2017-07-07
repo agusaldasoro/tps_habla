@@ -20,27 +20,12 @@ class playerThread(threading.Thread):
     def playerStatus(self):
         return player.get_state()
     
-    def isPausedByUser(self):
+    def isPausedByUser(self):of
         return isPaused
 
     def changeSong(self, songPath):
+        ''' Changes the current media, player needs to be paused.''' 
         self.player.set_mrl(songPath)
-
-
-    def run(self):
-        player = vlc.MediaPlayer(self.songPath)
-        print 'reproduciendo ' + self.songPath
-        player.play()
-        time.sleep(0.3)
-        playing = player.get_state()
-        print "reproduzco"
-        while not ( clm.is_set() ) and (player.get_state() == playing):
-            pass
-        clm.clear()
-        player.stop()
-        onSongEnd()
-        return
-
 
 class playlistHandler(threading.Thread):
 
@@ -63,13 +48,4 @@ class playlistHandler(threading.Thread):
             
             if not self.play:
                 return
-
-def main():
-    
-    p = playerThread('musica/todoBien.wav')
-    p.run()
-
-
-if __name__ == '__main__':
-    main()
 
