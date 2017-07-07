@@ -24,6 +24,12 @@
     Para probarlo, agregar el nuevo bot a algún grupo de Telegram
     y mandar un mensaje de voz a ese grupo.
 """
+
+"""
+Librerias necesarias:
+    pip install twx.botapi
+    pip install --upgrade watson-developer-cloud
+"""
 import os
 import time
 import sys
@@ -31,8 +37,10 @@ import twx.botapi as tb
 from watson_developer_cloud import SpeechToTextV1, TextToSpeechV1
 import subprocess
 import copy
+import player
 
-
+''' Usa la cuenta de la catedra, de hacer falta deberiamos tener una 
+'''
 stt = SpeechToTextV1(username='6f01e8bb-2faa-42a6-bec3-c1e236337b05', password='wRfZa13pn5Ke')
 tts = TextToSpeechV1(username='823bf474-b3a1-454c-9daa-f39f1fe7fba8', password='UgSusuE0f3PZ')
 
@@ -44,6 +52,7 @@ class Bot(object):
         self._token = token
         self._bot = tb.TelegramBot(token)
         self._bot.update_bot_info().wait()
+        self.mediaPlayer = player.playerThread('todoBien.wav')
         print('Bot levantado.')
 
     def poll(self):
@@ -61,10 +70,17 @@ class Bot(object):
 
         print('Bajando audio.')
         self._receive_audio_file(update.message.voice.file_id, 'audio.ogg')
-        text_to_speech("todoBien.wav", "todo bien, querido",  rate_change="+0%", f0mean_change="+0%")
+        
+        '''Transforms the voice message received by the bot in to text '''
+
+        mensajeAAnalizar = speech_to_text("audio.ogg")
+        print(mensajeAAnalizar)
+
+        response = obtenerRespuesta(mensajeAAnalizar)
+        text_to_speech("response.wav", response,  rate_change="+0%", f0mean_change="+0%")
 
         print('Enviando respuesta.')
-        self._send_audio_file(update.message.chat.id, 'todoBien.wav')
+        self._send_audio_file(update.message.chat.id, 'response.wav')
         
         print('Listo.\n')
 
@@ -91,6 +107,11 @@ class Bot(object):
             return int(line.strip(' \t\r\n'))
         else:
             return -1
+    def obtenerRespuesta(self, voiceMessage):
+        ''' Finds the correct answer and action for the message '''
+
+
+        return "todo bien, gracias"
 
 def speech_to_text(filename, stt=stt):
     ''' Reconocimiento del archivo de audio 'filename'. 'max_alternatives' es la cantidad de hipótesis más probables a devolver.'''
@@ -103,11 +124,11 @@ def speech_to_text(filename, stt=stt):
                                  continuous="true")
     return(ibm_recognized)
 
-# Síntesis del texto 'text', especificando cambios en tasa de habla y f0, ambos en 
-# porcentaje respecto del default del sistema. El resultado se guarda en 'filename'.
-# Es posible que el wav generado tenga mal el header, lo cual se arregla con:
-# sox -r 22050 filename.wav tmp.wav && mv tmp.wav filename.wav
 def text_to_speech(filename, text, rate_change="+0%", f0mean_change="+0%", tts=tts):
+    ''' Síntesis del texto 'text', especificando cambios en tasa de habla y f0, ambos en 
+    porcentaje respecto del default del sistema. El resultado se guarda en 'filename'.
+    Es posible que el wav generado tenga mal el header, lo cual se arregla con:
+    sox -r 22050 filename.wav tmp.wav && mv tmp.wav filename.wav'''
     ssml_text = '<prosody rate="%s" pitch="%s"> %s </prosody>' % (rate_change, f0mean_change, text)
     with open(filename, 'wb') as audio_file:
         audio_file.write(tts.synthesize(ssml_text,
@@ -115,6 +136,19 @@ def text_to_speech(filename, text, rate_change="+0%", f0mean_change="+0%", tts=t
                                     voice="es-US_SofiaVoice"))
     audio_file.close()
 
+
+
+def stopPlaylist(handler):
+    #NO ME JUZGUES AGUSTINA
+    handler.play = False
+
+
+def startPlaylist(playList, mediaPlayer):
+
+    #DO SOMETHING TO BUILD A PLAYLIST LIST?
+    handler = player.playlistHandler(playList,mediaPlayer)
+    handler.runPlaylist()
+    return handler
 
 
 def main():
