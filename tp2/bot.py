@@ -72,11 +72,14 @@ class Bot(object):
         self._receive_audio_file(update.message.voice.file_id, 'audio.ogg')
         
         '''Transforms the voice message received by the bot in to text '''
+        
+        os.system('ffmpeg  -i audio.ogg audio.wav')
 
-        mensajeAAnalizar = speech_to_text("audio.ogg")
+        mensajeAAnalizar = speech_to_text("audio.wav")
         print(mensajeAAnalizar)
+        os.remove("audio.wav")
+        response = self.obtenerRespuesta(mensajeAAnalizar)
 
-        response = obtenerRespuesta(mensajeAAnalizar)
         text_to_speech("response.wav", response,  rate_change="+0%", f0mean_change="+0%")
 
         print('Enviando respuesta.')
