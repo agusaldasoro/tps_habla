@@ -1,6 +1,6 @@
 import threading
 import vlc
-
+import time
 
 class playerThread(threading.Thread):
 
@@ -18,10 +18,10 @@ class playerThread(threading.Thread):
         self.player.pause()    
 
     def playerStatus(self):
-        return player.get_state()
+        return self.player.get_state()
     
-    def isPausedByUser(self):of
-        return isPaused
+    def isPausedByUser(self):
+        return self.isPaused
 
     def changeSong(self, songPath):
         ''' Changes the current media, player needs to be paused.''' 
@@ -30,8 +30,8 @@ class playerThread(threading.Thread):
 class playlistHandler(threading.Thread):
 
     def __init__(self,playList,mediaPlayer):
-        super(playerThread, self).__init__()
-        self.player = mediaPlayer(playList[0])
+        super(playlistHandler, self).__init__()
+        self.player = mediaPlayer
         self.play = True
         self.playlist = playList
         self.currentSong = 0
@@ -41,7 +41,8 @@ class playlistHandler(threading.Thread):
         for i in self.playlist:
             self.player.changeSong(i)
             self.player.play()
-            while (self.player.playerStatus() == playing) or (self.player.isPausedByUser()):
+            time.sleep(0.3)
+            while (self.player.playerStatus() == vlc.State.Playing) or (self.player.isPausedByUser()):
                 if not self.play:
                     return
                 pass
