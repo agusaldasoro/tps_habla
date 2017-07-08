@@ -59,7 +59,7 @@ ochenta = r'ochent'
 noventa = r'novent'
 dosMil = r'dos mil'
 cumbia = r'(cumbia|colombianos)'
-latinos = r'(latino|salsa|merengue|melodico)'
+latinos = r'(latino|salsa|merengue|melodico|baladas)'
 
 modificadores = r'(mas|menos|cambiar|subir|bajar|fuerte|alto|bajo|agudo|grave)'
 subirVolumen = r'(subir el volumen|subir volumen|mas fuerte|mas alto|mas volumen)'
