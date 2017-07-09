@@ -41,6 +41,8 @@ from watson_developer_cloud import SpeechToTextV1, TextToSpeechV1
 import subprocess
 import copy
 import player
+import threading
+import time
 
 ''' Usa la cuenta de la catedra, de hacer falta deberiamos tener una
 '''
@@ -75,6 +77,11 @@ nextSong = r'(avanzar|siguiente|next|proximo|lo escuche|la escuche|ya escuche|re
 
 insultos = r'(tonta|perra|estupida|puta|hija de|tarada|boluda|pelotuda|inutil)'
 
+playlists = {}
+nextSongEvent = threading.Event()
+stopEvent = threading.Event()
+p = player.playerThread('todoBien.wav')
+handler = player.playlistHandler([],p,nextSongEvent,stopEvent)
 class Bot(object):
 
     def __init__(self, token):
@@ -172,24 +179,34 @@ def quiereMusica(transcript):
 
 def genero(transcript):
     if re.search(rockNacional, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['rockNacional'])
         return "Qué sea Rock entonces"
     if re.search(rockInternacional, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['rock'])
         return "Divertite con un poco de lo mejor del Rock Internacional."
     if re.search(pop, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['pop'])
         return "Vamos con los reyes y reinas del Pop."
     if re.search(sesenta, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['sesenta'])
         return "Bienvenido, bienvenido amor. Te esperaba sesenta primavera."
     if re.search(setenta, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['setenta'])
         return "Viajemos un poco en el tiempo, hacia la década del setenta."
     if re.search(ochenta, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['ochenta'])
         return "Tirá, tirá para arriba, ochenta"
     if re.search(noventa, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['noventa'])
         return "Noventa, viviendo la vida loca."
     if re.search(dosMil, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['dosMil'])
         return "El no fin del mundo, los años dos mil."
     if re.search(cumbia, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['cumbia'])
         return "Muestrame un poquito para ver cómo es. Esa cumbia."
     if re.search(latinos, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['latinos'])
         return "Baila latinos, que ritmo te sobra."
 
     verificarGenero = ["Qué te gustaría escuchar", "Qué género de música preferís", "Qué querés escuchar en especial", "Hoy qué tenés ganas de escuchar", "Te gustaría escuchar música de alguna década"]
@@ -221,6 +238,7 @@ def quierePausa(transcript):
 
 def pausa():
     darPausa = ["Disculpa si este tema no fue de tu agrado", "No escucharemos más entonces", "Cuando quieras volvemos a escuchar la música que desees", "Mejor estemos en silencio por un rato", "Jugamos al oficio mudo"]
+    stopPlaylist()
     return random.choice(darPausa)
 
 def siguiente(transcript):
@@ -228,6 +246,7 @@ def siguiente(transcript):
 
 def avanzar():
     darNext = ["Avancemos", "OOtro tema", "Que pase el que sigue", "Mejor otra canción"]
+    nextSongEvent.set()
     return random.choice(darNext)
 
 def insulto(transcript):
@@ -266,20 +285,30 @@ def text_to_speech(filename, text, rate_change="+0%", f0mean_change="+0%", tts=t
 
 
 
-def stopPlaylist(handler):
+def stopPlaylist():
     #NO ME JUZGUES AGUSTINA
-    handler.play = False
+    p.userPause()
+    stopEvent.set()
+    time.sleep(0.5)
 
-
-def startPlaylist(playList, mediaPlayer):
+def startPlaylist(playList):
 
     #DO SOMETHING TO BUILD A PLAYLIST LIST?
-    handler = player.playlistHandler(playList,mediaPlayer)
-    handler.runPlaylist()
+    stopPlaylist()
+    nextSongEvent.clear()
+    stopEvent.clear()
+    handler = player.playlistHandler(playList,p, nextSongEvent,stopEvent)
+    print handler.playlist
+    handler.start()
     return handler
 
 
 def main():
+
+    '''Build playlists from folders in musica/'''
+    playlistsDir = os.listdir('musica/')
+    for i in playlistsDir:
+        playlists[i] = ['musica/' + i + '/' + j for j in os.listdir('musica/' + i + '/')]
 
     if not os.path.exists('token.txt'):
         sys.stderr.write('Poner el token en el archivo token.txt.\n')
@@ -290,5 +319,16 @@ def main():
         bot.poll()
         time.sleep(0.2)
 
+def main2():
+
+    '''Build playlists from folders in musica/'''
+    playlistsDir = os.listdir('musica/')
+    for i in playlistsDir:
+        playlists[i] = ['musica/' + i + '/' + j for j in os.listdir('musica/' + i + '/')]
+    handler = startPlaylist(playlists['rockNacional'])
+    time.sleep(10.0)
+    nextSongEvent.set()
+    time.sleep(15.0)
+    stopPlaylist() 
 if __name__ == '__main__':
     main()
