@@ -218,8 +218,10 @@ def cambiarModo(transcript):
 
 def modo(transcript):
     if (re.search(subirVolumen, transcript, re.M|re.I)):
+        p.subirVol()
         return "Subiré un poco más el volumen para que puedas oir mejor."
     if re.search(bajarVolumen, transcript, re.M|re.I):
+        p.bajarVol()
         return "Bajaré un poco más el volumen para que tus timpanos se conserven."
     if re.search(subirTono, transcript, re.M|re.I):
         return "Un poco más agudo será entonces."
@@ -326,9 +328,6 @@ def main2():
     for i in playlistsDir:
         playlists[i] = ['musica/' + i + '/' + j for j in os.listdir('musica/' + i + '/')]
     handler = startPlaylist(playlists['rockNacional'])
-    time.sleep(10.0)
-    nextSongEvent.set()
-    time.sleep(15.0)
     stopPlaylist() 
 if __name__ == '__main__':
     main()
