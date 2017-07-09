@@ -8,7 +8,20 @@ class playerThread(threading.Thread):
         super(playerThread, self).__init__()
         self.player = vlc.MediaPlayer(songPath)
         self.isPaused = True
-         
+        self.player.audio_set_volume(75)
+        self.volumen = 75
+
+    def bajarVol(self):
+
+        self.volumen -= 25
+        print self.volumen
+        self.player.audio_set_volume(self.volumen)
+
+    def subirVol(self):
+
+        self.volumen += 25
+        print self.volumen
+        self.player.audio_set_volume(self.volumen)
     def play(self):
         self.isPaused = False
         self.player.play()
@@ -36,6 +49,8 @@ class playlistHandler(threading.Thread):
         self.playlist = playList
         self.currentSong = 0
         self.nextSongEvent = aNextSongEvent
+
+    
 
     def run(self):
 
