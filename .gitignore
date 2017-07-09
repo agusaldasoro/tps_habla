@@ -87,3 +87,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Downloaded music for tp2
+/tp2/musica/*

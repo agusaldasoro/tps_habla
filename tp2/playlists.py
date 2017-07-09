@@ -1,6 +1,5 @@
 import urllib
 import urllib2
-import pandas
 import re
 import threading
 import pafy
@@ -10,7 +9,8 @@ import pandas as pd
 dir = os.path.dirname(__file__)
 
 ''' pip install pafy
-    pip install youtube-dl'''
+    pip install youtube-dl
+    pip install pandas'''
 
 def bajarAudio(audiostream,search,playlist):
 
@@ -63,7 +63,7 @@ if __name__ == '__main__':
                 getAudio(query, name, p[:-4])
             except:
                 print "no baje: " + name
-    
+
     query =  ytQuery('Metallica - Fuel')
 
 

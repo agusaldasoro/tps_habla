@@ -51,9 +51,9 @@ tts = TextToSpeechV1(username='823bf474-b3a1-454c-9daa-f39f1fe7fba8', password='
 
 
 # Regex para STT
-escucharMusica = r'(musica|tema|cancion|genero|escuchar|play|pone|rock|nacional|internacional|espanol|ingles|pop|decada|años|cincuent|sesent|setent|ochent|novent|dos mil|dos mil diez|cumbia|latin|salsa)'
-rockNacional = r'(nacional|argentino|espanol|rock de los ochenta|rock ochentoso)'
-rockInternacional = r'(internacional|ingles|rock)'
+escucharMusica = r'(quiero|gust|musica|tema|cancion|genero|escuchar|play|pone|rock|nacional|espanol|ingles|pop|decada|años|cincuent|sesent|setent|ochent|novent|dos mil|dos mil diez|cumbia|latin|salsa)'
+rockNacional = r'(nacional|argentino|espanol|rock de los ochen|rock ochen|rock de ochen)'
+rockInternacional = r'(internacional|ingles)'
 pop = r'pop'
 sesenta = r'sesent'
 setenta = r'setent'
@@ -73,9 +73,12 @@ bajarVelocidad = r'(bajar la velocidad|bajar velocidad|mas lento|menos rapido|ba
 
 pausar = r'(pasar|posar|pausa|para|stop|basta|no quiero|listo)'
 
-nextSong = r'(avanzar|siguiente|next|proximo|lo escuche|la escuche|ya escuche|repetido|otro|otra|no me gusta|no gusta)'
+nextSong = r'(avanzar|siguiente|next|proximo|lo escuche|la escuche|ya escuche|repetido|otro|otra|no me gust|no gust)'
 
 insultos = r'(tonta|perra|estupida|puta|hija de|tarada|boluda|pelotuda|inutil)'
+
+queEscucha = r'(escuch|suena|sonando|sono|que tema es|que cancion es|que es esto|que pusiste|no lo conozco|informacion)'
+
 
 playlists = {}
 nextSongEvent = threading.Event()
@@ -162,28 +165,37 @@ def procesarPedido(transcript):
     transcript = unicodedata.normalize('NFKD', transcript).encode('ascii','ignore')
     print(transcript)
 
-    if quiereMusica(transcript):
-        return genero(transcript)
-    if cambiarModo(transcript):
-        return modo(transcript)
-    if quierePausa(transcript):
-        return pausa()
-    if siguiente(transcript):
-        return avanzar()
     if insulto(transcript):
         return devolverInsulto()
+    if quierePausa(transcript):
+        return pausa()
+    if cambiarModo(transcript):
+        return modo(transcript)
+    if siguiente(transcript):
+        return avanzar()
+    if quiereMusica(transcript):
+        return genero(transcript)
+    if quiereSaberTema(transcript):
+        return queEstoyEscuchando()
     return noEntendiNada()
 
 def quiereMusica(transcript):
     return re.search(escucharMusica, transcript, re.M|re.I)
 
 def genero(transcript):
+    if re.search(r'rock', transcript, re.M|re.I):
+        if re.search(rockNacional, transcript, re.M|re.I) and not(re.search(rockInternacional, transcript, re.M|re.I)):
+            handler = startPlaylist(playlists['rockNacional'])
+            return "Qué sea Rock entonces"
+        else:
+            handler = startPlaylist(playlists['rock'])
+            return "Divertite con un poco de lo mejor del Rock."
+    if re.search(rockInternacional, transcript, re.M|re.I):
+        handler = startPlaylist(playlists['rock'])
+        return "Divertite con un poco de lo mejor del Rock."
     if re.search(rockNacional, transcript, re.M|re.I):
         handler = startPlaylist(playlists['rockNacional'])
         return "Qué sea Rock entonces"
-    if re.search(rockInternacional, transcript, re.M|re.I):
-        handler = startPlaylist(playlists['rock'])
-        return "Divertite con un poco de lo mejor del Rock Internacional."
     if re.search(pop, transcript, re.M|re.I):
         handler = startPlaylist(playlists['pop'])
         return "Vamos con los reyes y reinas del Pop."
@@ -223,14 +235,14 @@ def modo(transcript):
     if re.search(bajarVolumen, transcript, re.M|re.I):
         p.bajarVol()
         return "Bajaré un poco más el volumen para que tus timpanos se conserven."
-    if re.search(subirTono, transcript, re.M|re.I):
-        return "Un poco más agudo será entonces."
-    if re.search(bajarTono, transcript, re.M|re.I):
-        return "Vamos a agravar esta situación."
-    if re.search(subirVelocidad, transcript, re.M|re.I):
-        return "Te gustan las ardillitas."
-    if re.search(bajarVelocidad, transcript, re.M|re.I):
-        return "Hablemos cetáseo."
+    # if re.search(subirTono, transcript, re.M|re.I):
+    #     return "Un poco más agudo será entonces."
+    # if re.search(bajarTono, transcript, re.M|re.I):
+    #     return "Vamos a agravar esta situación."
+    # if re.search(subirVelocidad, transcript, re.M|re.I):
+    #     return "Te gustan las ardillitas."
+    # if re.search(bajarVelocidad, transcript, re.M|re.I):
+    #     return "Hablemos cetáseo."
 
     verificarModo = ["Quisieras modificar el volumen", "Te gusta como está sonando", "Podés escucharlo más fuerte si querés"]
     return random.choice(verificarModo)
@@ -256,7 +268,14 @@ def insulto(transcript):
 
 def devolverInsulto():
     devolvidas = ["Cree lo que quieras, pero yo soy superior a vos", "Y tú, sabés cuál es último dígito de Pi conocido", "Bueno, pero yo sigo aquí", "Justo aquí tienes el botón de cerrar aplicación"]
+    stopPlaylist()
     return random.choice(devolvidas)
+
+def quiereSaberTema(transcript):
+    return re.search(queEscucha, transcript, re.M|re.I)
+
+def queEstoyEscuchando():
+    return "Lo Artesanal de Viejas Locas"
 
 def noEntendiNada():
     instrucciones = ["Si quieres escuchar alguna canción sólo dime qué género te gustaría", "Te gustaría escuchar algo de música", "Para escuchar algún tema, sólo dime qué estilo te gusta y yo eligiré lo mejor para ti.", "Cuál es tu década favorita", "Tienes ganas de escuchar algo de pop", "Cómo está tu ánimo para escuchar unas cumbias", "Qué tipo de música te gustaría escuchar"]
@@ -328,6 +347,6 @@ def main2():
     for i in playlistsDir:
         playlists[i] = ['musica/' + i + '/' + j for j in os.listdir('musica/' + i + '/')]
     handler = startPlaylist(playlists['rockNacional'])
-    stopPlaylist() 
+    stopPlaylist()
 if __name__ == '__main__':
     main()
