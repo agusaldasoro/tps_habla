@@ -10,7 +10,7 @@ class playerThread(threading.Thread):
         self.isPaused = True
         self.player.audio_set_volume(75)
         self.volumen = 75
-
+        self.song = songPath
     def bajarVol(self):
 
         self.volumen -= 25
@@ -39,7 +39,7 @@ class playerThread(threading.Thread):
     def changeSong(self, songPath):
         ''' Changes the current media, player needs to be paused.''' 
         self.player.set_mrl(songPath)
-
+        self.song = songPath
 class playlistHandler(threading.Thread):
 
     def __init__(self,playList,mediaPlayer, aNextSongEvent,stopEvent):

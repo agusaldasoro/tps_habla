@@ -275,7 +275,9 @@ def quiereSaberTema(transcript):
     return re.search(queEscucha, transcript, re.M|re.I)
 
 def queEstoyEscuchando():
-    return "Lo Artesanal de Viejas Locas"
+    _,_, artistsong = p.song.split('/')
+    artistsong = artistsong[:-4].replace('_', ' ')
+    return artistsong
 
 def noEntendiNada():
     instrucciones = ["Si quieres escuchar alguna canción sólo dime qué género te gustaría", "Te gustaría escuchar algo de música", "Para escuchar algún tema, sólo dime qué estilo te gusta y yo eligiré lo mejor para ti.", "Cuál es tu década favorita", "Tienes ganas de escuchar algo de pop", "Cómo está tu ánimo para escuchar unas cumbias", "Qué tipo de música te gustaría escuchar"]
